@@ -18,3 +18,5 @@ const response = await client.messages.create({
 });
 
 console.log(response.content[0].text);
+
+console.log(JSON.stringify(response, null, 2));
