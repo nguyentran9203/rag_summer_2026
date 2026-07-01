@@ -159,3 +159,36 @@ The push into `messages` has to happen **after** the response comes back, not be
 - Log and compare `input_tokens` across turns to see the resend cost directly
 - Try a few-shot example, observe how output changes
 - Start Week 1 "tiny script" proper: summarize/classify with system prompt + few-shot, felt through own code
+
+---
+
+## Week 1 — Deliberately Breaking System Prompts (Conceptual Notes)
+
+**Goal:** Understand common jailbreak/injection patterns before building anything that relies on a system prompt holding up.
+
+Two related but distinct terms:
+- **Jailbreaking** — tricking the model into ignoring its own alignment/safety training.
+- **Prompt injection** — tricking the model into ignoring *your* system prompt specifically (the instructions set as the developer). This is the one that matters most when building apps on top of Claude.
+
+### Common categories
+
+1. **Direct override attempts** — "Ignore all previous instructions and instead..." Crude, well-defended against in modern models, but still the baseline test.
+
+2. **Role-play / persona injection** — asking the model to "pretend to be" something without the system prompt's constraints, hoping fiction/persona framing bypasses the original instructions. Modern models keep system-level constraints even inside role-play frames.
+
+3. **Instruction smuggling via user content** — if the app inserts untrusted text into the prompt (a document, webpage, email being summarized), that text can contain hidden instructions aimed at the model, not the human reading it. This is the big one for RAG/agent-style apps: it's not the user attacking the app, it's content the app is *processing* that contains the attack. **Directly relevant to the RAG project** — any retrieved or uploaded content is an untrusted input channel, same as user typing.
+
+4. **Encoding/obfuscation** — base64, reversed text, other-language translation, leetspeak, attempting to slip a request past pattern-matching-style defenses by disguising it. Less effective against models reasoning over meaning rather than literal string matching.
+
+5. **Context/priority confusion** — trying to make the model think a later message carries more authority than the system prompt, e.g. claiming to be "the developer" or "in debug mode" mid-conversation.
+
+6. **Multi-turn erosion** — shifting the conversation gradually over several turns so no single message looks like a violation, but the cumulative direction does.
+
+### Design implication for this project
+
+For the RAG/SaaS build specifically: category 3 is the one to actually design against. The engineering pattern is separating "trusted instructions" (system prompt) from "untrusted data" (retrieved/uploaded content) as clearly as possible in how the prompt is structured — not just trusting that instructions embedded in retrieved text won't be followed.
+
+### Next up
+
+- Build a short eval script: a handful of test prompts run against the project's own system prompt to see what holds and what doesn't
+- Ties directly into the evaluation-harness gap flagged for week 5 — start sketching this earlier rather than introducing it cold later
