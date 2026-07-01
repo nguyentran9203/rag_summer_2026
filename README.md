@@ -1,2 +1,3 @@
 RAG SUMMER PROJECT 2026
-smallest possible version of "use Claude to do something useful with real text
+
+/n Smallest possible version of "use Claude to do something useful with real text"
